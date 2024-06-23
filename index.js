@@ -1,8 +1,12 @@
 import express from "express";
 import bodyParser from "body-parser";
+import dotenv from "dotenv";
+
 
 const app = express();
-const port = 3000;
+dotenv.config();
+
+const PORT = process.env.PORT || 3000;
 const masterKey = "4VGP2DN-6EWM4SJ-N6FGRHV-Z3PR3TT";
 
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -142,8 +146,8 @@ app.delete("/jokes", (req, res) => {
 
 //8. DELETE All jokes
 
-app.listen(port, () => {
-  console.log(`Successfully started server on port ${port}.`);
+app.listen(PORT, () => {
+  console.log(`Successfully started server on port ${PORT}.`);
 });
 
 var jokes = [
