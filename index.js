@@ -1,42 +1,36 @@
 import express from "express";
-import bodyParser from "body-parser";
 import dotenv from "dotenv";
 
 
 const app = express();
 dotenv.config();
 
+
 const PORT = process.env.PORT || 3000;
 const masterKey = "4VGP2DN-6EWM4SJ-N6FGRHV-Z3PR3TT";
 
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true }));
 
-app.use(express.json());
-
-
-//get req on random
-
+//1. GET a random joke
 app.get('/random',(req,res)=>{
-      const randomIndex = Math.floor(Math.random() * jokes.length);
-      res.json(jokes[randomIndex]);
+  const randomJoke = jokes[Math.floor(Math.random() * jokes.length)];
+  res.json(randomJoke)
 })
 
-
-//get req on specific 
-
+//2. GET a specific joke
+//dynamic route
 app.get('/jokes/:id',(req,res)=>{
-   const id = Number(req.params.id)
-   const foundJoke = jokes.find((joke)=> joke.id === id);
-   if(!foundJoke){
-     res.status(500).json('Cannot find specified joke');
-   }
-   res.json(foundJoke)
+  const id = Number(req.params.id)
+  const foundJoke = jokes.find((joke)=> joke.id === id);
+  if(!foundJoke){
+    res.status(500).json('Cannot find specified joke');
+  }
+  res.json(foundJoke)
 })
 
-//get req on filter
-
-app.get('/filter',(req,res)=>{
- const queryType = req.query.type;
+//3. GET a jokes by filtering on the joke type
+app.get('/filter', (req, res) => {
+  const queryType = req.query.type;
 
   if (!queryType) {
     return res.status(400).json({ error: 'Type query parameter is required' });
@@ -45,11 +39,12 @@ app.get('/filter',(req,res)=>{
   const filteredJokes = jokes.filter(joke => joke.jokeType === queryType);
 
   res.json(filteredJokes);
-})
+});
 
-//post req
 
-app.post('/post',(req,res)=>{
+//4. POST a new joke
+
+app.post('/post', (req, res) => {
   const postJoke = req.body;
   postJoke.id = jokes.length + 1;
 
@@ -59,28 +54,11 @@ app.post('/post',(req,res)=>{
   jokes.push(postJoke);
 
   res.status(201).json({ status: 'created', joke: postJoke });
-})
+});
 
-//put req
+//5. PUT a joke
 
-app.put('/jokes/:id',(req,res)=>{
-   const id = Number(req.params.id);
-  const jokeIndex = jokes.findIndex((joke) => joke.id === id);
-
-  if (jokeIndex === -1) {
-    return res.status(404).json({ error: "Joke not found" });
-  }
-
-  const updatedJoke = { ...jokes[jokeIndex], ...req.body };
-  jokes[jokeIndex] = updatedJoke;
-
-  res.status(200).json({ status: 'Updated', joke: updatedJoke });
-})
-
-
-//patch req
-
-app.patch('/jokes/:id',(req,res)=>{
+app.put('/jokes/:id', (req, res) => {
   const id = Number(req.params.id);
   const jokeIndex = jokes.findIndex((joke) => joke.id === id);
 
@@ -92,10 +70,27 @@ app.patch('/jokes/:id',(req,res)=>{
   jokes[jokeIndex] = updatedJoke;
 
   res.status(200).json({ status: 'Updated', joke: updatedJoke });
+});
 
-})
+//6. PATCH a joke
 
-app.delete('/jokes/:id',(req,res)=>{
+app.patch('/jokes/:id', (req, res) => {
+  const id = Number(req.params.id);
+  const jokeIndex = jokes.findIndex((joke) => joke.id === id);
+
+  if (jokeIndex === -1) {
+    return res.status(404).json({ error: "Joke not found" });
+  }
+
+  const updatedJoke = { ...jokes[jokeIndex], ...req.body };
+  jokes[jokeIndex] = updatedJoke;
+
+  res.status(200).json({ status: 'Updated', joke: updatedJoke });
+});
+
+//7. DELETE Specific joke
+
+app.delete('/jokes/:id', (req, res) => {
   const id = Number(req.params.id);
   const targetJokeIndex = jokes.findIndex((joke) => joke.id === id);
 
@@ -105,11 +100,12 @@ app.delete('/jokes/:id',(req,res)=>{
 
   jokes.splice(targetJokeIndex, 1);
   res.status(200).json({ status: 'Deleted Successfully' });
-})
+});
 
 
-app.delete("/jokes", (req, res) => {
-   const userKey = req.query.key; // Assuming the key is provided as a query parameter
+//8. DELETE All jokes
+app.delete('/all', (req, res) => {
+  const userKey = req.query.key; // Assuming the key is provided as a query parameter
 
   if (userKey === masterKey) {
     jokes = [];
@@ -119,29 +115,6 @@ app.delete("/jokes", (req, res) => {
   }
 });
 
-
-
-
-
-
-
-
-
-//1. GET a random joke
-
-//2. GET a specific joke
-
-//3. GET a jokes by filtering on the joke type
-
-//4. POST a new joke
-
-//5. PUT a joke
-
-//6. PATCH a joke
-
-//7. DELETE Specific joke
-
-//8. DELETE All jokes
 
 app.listen(PORT, () => {
   console.log(`Successfully started server on port ${PORT}.`);
