@@ -16,7 +16,7 @@ app.use(express.json());
 
 //get req on random
 
-app.get('/joke',(req,res)=>{
+app.get('/random',(req,res)=>{
       const joke=jokes[Math.floor(Math.random()*jokes.length)];
       res.send(joke);
 })
@@ -33,7 +33,7 @@ app.get('/joke/filter',(req,res)=>{
 
 //get req on specific 
 
-app.get('/joke/:id',(req,res)=>{
+app.get('/jokes/:id',(req,res)=>{
      const id=parseInt(req.params.id);
      const specific_joke = jokes.find((joke)=>joke.id == id);
 
@@ -47,7 +47,7 @@ app.get('/joke/:id',(req,res)=>{
 
 //post req
 
-app.post('/joke',(req,res)=>{
+app.post('/post',(req,res)=>{
   const newJoke = {
     id: jokes.length + 1,
     jokeText: req.body.jokeText,
@@ -61,7 +61,7 @@ app.post('/joke',(req,res)=>{
 
 //put req
 
-app.put('/joke/:id',(req,res)=>{
+app.put('/jokes/:id',(req,res)=>{
     const id =parseInt(req.params.id);
     const changeJoke={
       id:req.params.id,
@@ -81,7 +81,7 @@ app.put('/joke/:id',(req,res)=>{
 
 //patch req
 
-app.patch('/joke/:id',(req,res)=>{
+app.patch('/jokes/:id',(req,res)=>{
    const id = parseInt(req.params.id);
    const index= jokes.findIndex((j)=>j.id == id);
 
@@ -96,7 +96,7 @@ app.patch('/joke/:id',(req,res)=>{
 
 })
 
-app.delete('/joke/:id',(req,res)=>{
+app.delete('/jokes/:id',(req,res)=>{
    const id = parseInt(req.params.id);
 
    const index=jokes.findIndex((joke)=>joke.id == id);
