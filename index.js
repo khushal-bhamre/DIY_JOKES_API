@@ -17,108 +17,105 @@ app.use(express.json());
 //get req on random
 
 app.get('/random',(req,res)=>{
-      const joke=jokes[Math.floor(Math.random()*jokes.length)];
-      res.send(joke);
+      const randomIndex = Math.floor(Math.random() * jokes.length);
+      res.json(jokes[randomIndex]);
 })
 
-//get req on filter
-
-app.get('/joke/filter',(req,res)=>{
-  const queryJoke=req.query.jokeType;
-
-  const filterJoke=jokes.filter((joke)=>joke.jokeType==queryJoke);
-
-  return res.json(filterJoke);
-})
 
 //get req on specific 
 
 app.get('/jokes/:id',(req,res)=>{
-     const id=parseInt(req.params.id);
-     const specific_joke = jokes.find((joke)=>joke.id == id);
-
-     if(specific_joke == undefined){
-      res.status(404).json({error:"joke not found"})
-     }else{
-      res.send(specific_joke);
-     }
+   const id = Number(req.params.id)
+   const foundJoke = jokes.find((joke)=> joke.id === id);
+   if(!foundJoke){
+     res.status(500).json('Cannot find specified joke');
+   }
+   res.json(foundJoke)
 })
 
+//get req on filter
+
+app.get('/filter',(req,res)=>{
+ const queryType = req.query.type;
+
+  if (!queryType) {
+    return res.status(400).json({ error: 'Type query parameter is required' });
+  }
+
+  const filteredJokes = jokes.filter(joke => joke.jokeType === queryType);
+
+  res.json(filteredJokes);
+})
 
 //post req
 
 app.post('/post',(req,res)=>{
-  const newJoke = {
-    id: jokes.length + 1,
-    jokeText: req.body.jokeText,
-    jokeType: req.body.jokeType,
-  };
+  const postJoke = req.body;
+  postJoke.id = jokes.length + 1;
 
-    jokes.push(newJoke);
-    console.log(jokes.slice(-1));
-    res.status(201).json({status:"created"});
+  if (!postJoke.jokeText || !postJoke.jokeType) {
+    return res.status(400).json({ error: 'Invalid joke data' });
+  }
+  jokes.push(postJoke);
+
+  res.status(201).json({ status: 'created', joke: postJoke });
 })
 
 //put req
 
 app.put('/jokes/:id',(req,res)=>{
-    const id =parseInt(req.params.id);
-    const changeJoke={
-      id:req.params.id,
-      jokeText:req.body.jokeText,
-      jokeType:req.body.jokeType
-    };
-    const index = jokes.findIndex((j)=>j.id == id);
-    if(index == -1){
-      return res.status(404).json({error:'joke not found'});
-   }
+   const id = Number(req.params.id);
+  const jokeIndex = jokes.findIndex((joke) => joke.id === id);
 
-    jokes[index]=changeJoke;
+  if (jokeIndex === -1) {
+    return res.status(404).json({ error: "Joke not found" });
+  }
 
-    res.json(changeJoke);
+  const updatedJoke = { ...jokes[jokeIndex], ...req.body };
+  jokes[jokeIndex] = updatedJoke;
+
+  res.status(200).json({ status: 'Updated', joke: updatedJoke });
 })
 
 
 //patch req
 
 app.patch('/jokes/:id',(req,res)=>{
-   const id = parseInt(req.params.id);
-   const index= jokes.findIndex((j)=>j.id == id);
+  const id = Number(req.params.id);
+  const jokeIndex = jokes.findIndex((joke) => joke.id === id);
 
-    if(index == -1){
-      return res.status(404).json({error:'joke not found'});
-    }
-    const updatedJoke={...jokes[index],...req.body};
-    jokes[index]=updatedJoke;
+  if (jokeIndex === -1) {
+    return res.status(404).json({ error: "Joke not found" });
+  }
 
-    console.log(jokes[index]);
-    res.json(updatedJoke);
+  const updatedJoke = { ...jokes[jokeIndex], ...req.body };
+  jokes[jokeIndex] = updatedJoke;
+
+  res.status(200).json({ status: 'Updated', joke: updatedJoke });
 
 })
 
 app.delete('/jokes/:id',(req,res)=>{
-   const id = parseInt(req.params.id);
+  const id = Number(req.params.id);
+  const targetJokeIndex = jokes.findIndex((joke) => joke.id === id);
 
-   const index=jokes.findIndex((joke)=>joke.id == id);
+  if (targetJokeIndex === -1) {
+    return res.status(404).json({ error: 'Joke not found' });
+  }
 
-   const deleted_joke=jokes[index];
-
-    if(index == -1){
-       return res.status(404).json({error:'joke not found'});
-    }
-
-     jokes.splice(index,1);
-     res.status(200);
+  jokes.splice(targetJokeIndex, 1);
+  res.status(200).json({ status: 'Deleted Successfully' });
 })
 
 
 app.delete("/jokes", (req, res) => {
-  const Key = req.query.key;
-  if (Key === masterKey) {
+   const userKey = req.query.key; // Assuming the key is provided as a query parameter
+
+  if (userKey === masterKey) {
     jokes = [];
-    res.sendStatus(200);
+    res.status(200).json({ status: 'Deleted all jokes' });
   } else {
-    res.status(404).json({ error: `You are not authorised to perform this action.` });
+    res.status(403).json({ error: 'You are not authorized to perform this action!' });
   }
 });
 
