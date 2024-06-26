@@ -1,126 +1,14 @@
 import express from "express";
 import dotenv from "dotenv";
 
-
 const app = express();
 dotenv.config();
-
 
 const PORT = process.env.PORT || 3000;
 const masterKey = "4VGP2DN-6EWM4SJ-N6FGRHV-Z3PR3TT";
 
-app.use(express.urlencoded({ extended: true }));
-
-//1. GET a random joke
-app.get('/random',(req,res)=>{
-  const randomJoke = jokes[Math.floor(Math.random() * jokes.length)];
-  res.json(randomJoke)
-})
-
-//2. GET a specific joke
-//dynamic route
-app.get('/jokes/:id',(req,res)=>{
-  const id = Number(req.params.id)
-  const foundJoke = jokes.find((joke)=> joke.id === id);
-  if(!foundJoke){
-    res.status(500).json('Cannot find specified joke');
-  }
-  res.json(foundJoke)
-})
-
-//3. GET a jokes by filtering on the joke type
-app.get('/filter', (req, res) => {
-  const queryType = req.query.type;
-
-  if (!queryType) {
-    return res.status(400).json({ error: 'Type query parameter is required' });
-  }
-
-  const filteredJokes = jokes.filter(joke => joke.jokeType === queryType);
-
-  res.json(filteredJokes);
-});
-
-
-//4. POST a new joke
-
-app.post('/post', (req, res) => {
-  const postJoke = req.body;
-  postJoke.id = jokes.length + 1;
-
-  if (!postJoke.jokeText || !postJoke.jokeType) {
-    return res.status(400).json({ error: 'Invalid joke data' });
-  }
-  jokes.push(postJoke);
-
-  res.status(201).json({ status: 'created', joke: postJoke });
-});
-
-//5. PUT a joke
-
-app.put('/jokes/:id', (req, res) => {
-  const id = Number(req.params.id);
-  const jokeIndex = jokes.findIndex((joke) => joke.id === id);
-
-  if (jokeIndex === -1) {
-    return res.status(404).json({ error: "Joke not found" });
-  }
-
-  const updatedJoke = { ...jokes[jokeIndex], ...req.body };
-  jokes[jokeIndex] = updatedJoke;
-
-  res.status(200).json({ status: 'Updated', joke: updatedJoke });
-});
-
-//6. PATCH a joke
-
-app.patch('/jokes/:id', (req, res) => {
-  const id = Number(req.params.id);
-  const jokeIndex = jokes.findIndex((joke) => joke.id === id);
-
-  if (jokeIndex === -1) {
-    return res.status(404).json({ error: "Joke not found" });
-  }
-
-  const updatedJoke = { ...jokes[jokeIndex], ...req.body };
-  jokes[jokeIndex] = updatedJoke;
-
-  res.status(200).json({ status: 'Updated', joke: updatedJoke });
-});
-
-//7. DELETE Specific joke
-
-app.delete('/jokes/:id', (req, res) => {
-  const id = Number(req.params.id);
-  const targetJokeIndex = jokes.findIndex((joke) => joke.id === id);
-
-  if (targetJokeIndex === -1) {
-    return res.status(404).json({ error: 'Joke not found' });
-  }
-
-  jokes.splice(targetJokeIndex, 1);
-  res.status(200).json({ status: 'Deleted Successfully' });
-});
-
-
-//8. DELETE All jokes
-app.delete('/all', (req, res) => {
-  const userKey = req.query.key; // Assuming the key is provided as a query parameter
-
-  if (userKey === masterKey) {
-    jokes = [];
-    res.status(200).json({ status: 'Deleted all jokes' });
-  } else {
-    res.status(403).json({ error: 'You are not authorized to perform this action!' });
-  }
-});
-
-
-app.listen(PORT, () => {
-  console.log(`Successfully started server on port ${PORT}.`);
-});
-
-var jokes = [
+// Define jokes array before using it in route handlers
+let jokes = [
   {
     id: 1,
     jokeText:
@@ -692,3 +580,104 @@ var jokes = [
     jokeType: "Food",
   },
 ];
+
+
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json()); // Needed to parse JSON request bodies
+
+// 1. GET a random joke
+app.get('/random', (req, res) => {
+  const randomJoke = jokes[Math.floor(Math.random() * jokes.length)];
+  res.json(randomJoke);
+});
+
+// 2. GET a specific joke
+app.get('/jokes/:id', (req, res) => {
+  const id = Number(req.params.id);
+  const foundJoke = jokes.find(joke => joke.id === id);
+  if (!foundJoke) {
+    return res.status(404).json({ error: 'Cannot find specified joke' });
+  }
+  res.json(foundJoke);
+});
+
+// 3. GET jokes by filtering on the joke type
+app.get('/filter', (req, res) => {
+  const queryType = req.query.type;
+
+  if (!queryType) {
+    return res.status(400).json({ error: 'Type query parameter is required' });
+  }
+
+  const filteredJokes = jokes.filter(joke => joke.jokeType === queryType);
+  res.json(filteredJokes);
+});
+
+// 4. POST a new joke
+app.post('/post', (req, res) => {
+  const postJoke = req.body;
+  postJoke.id = jokes.length + 1;
+
+  if (!postJoke.jokeText || !postJoke.jokeType) {
+    return res.status(400).json({ error: 'Invalid joke data' });
+  }
+  jokes.push(postJoke);
+  res.status(201).json({ status: 'Created', joke: postJoke });
+});
+
+// 5. PUT a joke
+app.put('/jokes/:id', (req, res) => {
+  const id = Number(req.params.id);
+  const jokeIndex = jokes.findIndex(joke => joke.id === id);
+
+  if (jokeIndex === -1) {
+    return res.status(404).json({ error: "Joke not found" });
+  }
+
+  const updatedJoke = { ...jokes[jokeIndex], ...req.body };
+  jokes[jokeIndex] = updatedJoke;
+  res.status(200).json({ status: 'Updated', joke: updatedJoke });
+});
+
+// 6. PATCH a joke
+app.patch('/jokes/:id', (req, res) => {
+  const id = Number(req.params.id);
+  const jokeIndex = jokes.findIndex(joke => joke.id === id);
+
+  if (jokeIndex === -1) {
+    return res.status(404).json({ error: "Joke not found" });
+  }
+
+  const updatedJoke = { ...jokes[jokeIndex], ...req.body };
+  jokes[jokeIndex] = updatedJoke;
+  res.status(200).json({ status: 'Updated', joke: updatedJoke });
+});
+
+// 7. DELETE a specific joke
+app.delete('/jokes/:id', (req, res) => {
+  const id = Number(req.params.id);
+  const targetJokeIndex = jokes.findIndex(joke => joke.id === id);
+
+  if (targetJokeIndex === -1) {
+    return res.status(404).json({ error: 'Joke not found' });
+  }
+
+  jokes.splice(targetJokeIndex, 1);
+  res.status(200).json({ status: 'Deleted Successfully' });
+});
+
+// 8. DELETE all jokes
+app.delete('/all', (req, res) => {
+  const userKey = req.query.key;
+
+  if (userKey === masterKey) {
+    jokes = [];
+    res.status(200).json({ status: 'Deleted all jokes' });
+  } else {
+    res.status(403).json({ error: 'You are not authorized to perform this action!' });
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`Successfully started server on port ${PORT}.`);
+});
